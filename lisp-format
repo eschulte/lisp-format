@@ -53,6 +53,16 @@
                (abort 2 "lisp-format: Unknown command line argument '%s'.  Try: 'lisp-format -help'" ,arg))
               (t (push ,arg argv) (return-from ,getopts-block)))))))
 
+(defun find-file-recursively (file directory)
+  (let ((current (expand-file-name file directory)))
+    (if (file-exists-p current)
+        current
+      (let ((parent-directory
+             (file-name-directory (directory-file-name directory))))
+        (if (string= "/" parent-directory)
+            nil
+          (find-file-recursively file parent-directory))))))
+
 (defun show-help ()
   (abort 0 "OVERVIEW: A tool to format common-lisp/emacs-lisp/scheme code.
 
@@ -125,7 +135,14 @@ DEFERRED OPTIONS (maybe one day):
 (do ((file (pop argv) (pop argv)))
     ((null file))
   (message "HANDLING FILE:%s" file)
+  (unless (file-exists-p file)
+    (abort "No such file or directory: '%s'" file))
   ;;    0. Read the style file if one is present.
-  ;;    1. Indent (for every start/end pair)
-  ;;    2. Remove trailing whitespace (for every start/end pair)
-  )
+  (when (eql style :file)
+    (let ((lisp-format-file
+           (find-file-recursively
+            ".lisp-format" (file-name-directory (expand-file-name file)))))
+      (load lisp-format-file t t))))
+
+
+
