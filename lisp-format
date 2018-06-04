@@ -1,0 +1,131 @@
+:; exec emacs -Q --script "$0" -- "$@" # -*- emacs-lisp -*-
+
+;;; Thanks to this fancy line above, run this file directly from the
+;;; command line as an executable.
+
+;;; Should follow the specification of clang-format as closely as
+;;; possible.  This is the best standard in this space.
+
+;;; Structure:
+;;; 0. Parse options and arguments
+;;; 1. For every target file
+;;;    0. Read the style file if one is present.
+;;;    1. Indent (for every start/end pair)
+;;;    2. Remove trailing whitespace (for every start/end pair)
+(eval-when-compile (require 'cl))
+(require 'cl-lib)
+
+(pop argv)                              ; Remove the leading "--".
+
+
+;;; 0. Process the options and arguments (files).
+(defvar inplace nil)
+(defvar offsets nil)
+(defvar lengths nil)
+(defvar lines nil)
+(defvar style :default)
+
+(defun starts-with-p (substring string)
+  (let ((sub-length (length substring)))
+    (and (>= (length string) sub-length)
+         (string= (subseq string 0 sub-length) substring))))
+
+(defun abort (code fmt &rest args)
+  (apply #'message fmt args)
+  ;; (message "EXIT:%S" code)
+  (kill-emacs 2))
+
+(defmacro getopts (&rest forms)
+  "Collect command-line options from ARGS in an executable."
+  (let ((arg (gensym))
+        (getopts-block (gensym)))
+    `(block ,getopts-block
+       (loop for ,arg = (pop argv) while ,arg do
+             (cond
+              ,@(mapcar (lambda (form)
+                          `((starts-with-p ,(car form) ,arg)
+                            (when (and (> (length ,arg) ,(length (car form)))
+                                       (= ?\= (aref ,arg ,(length (car form)))))
+                              (push (subseq ,arg (1+ ,(length (car form)))) argv))
+                            ,@(cdr form)))
+                        forms)
+              ((starts-with-p "-" ,arg)
+               (abort 2 "lisp-format: Unknown command line argument '%s'.  Try: 'lisp-format -help'" ,arg))
+              (t (push ,arg argv) (return-from ,getopts-block)))))))
+
+(defun show-help ()
+  (abort 0 "OVERVIEW: A tool to format common-lisp/emacs-lisp/scheme code.
+
+If no arguments are specified, it formats the code from standard input
+and writes the result to the standard output.
+If <file>s are given, it reformats the files. If -i is specified
+together with <file>s, the files are edited in-place. Otherwise, the
+result is written to the standard output.
+
+USAGE: lisp-format [options] [<file> ...]
+
+OPTIONS:
+  -assume-filename=<string> - When reading from stdin, lisp-format assumes this
+                              filename to look for a style config file (with
+                              -style=file) and to determine the language.
+  -fallback-style=<string>  - The name of the predefined style used as a
+                              fallback in case lisp-format is invoked with
+                              -style=file, but can not find the .lisp-format
+                              file to use.
+                              Use -fallback-style=none to skip formatting.
+  -help                     - Display available options (-help-hidden for more)
+  -i                        - Inplace edit <file>s, if specified.
+  -length=<uint>            - Format a range of this length (in bytes).
+                              Multiple ranges can be formatted by specifying
+                              several -offset and -length pairs.
+                              When only a single -offset is specified without
+                              -length, lisp-format will format up to the end
+                              of the file.
+                              Can only be used with one input file.
+  -lines=<string>           - <start line>:<end line> - format a range of
+                              lines (both 1-based).
+                              Multiple ranges can be formatted by specifying
+                              several -lines arguments.
+                              Can't be used with -offset and -length.
+                              Can only be used with one input file.
+  -offset=<uint>            - Format a range starting at this byte offset.
+                              Multiple ranges can be formatted by specifying
+                              several -offset and -length pairs.
+                              Can only be used with one input file.
+  -style=<string>           - Coding style, currently supports:
+                                LLVM, Google, Chromium, Mozilla, WebKit.
+                              Use -style=file to load style configuration from
+                              .lisp-format file located in one of the parent
+                              directories of the source file (or current
+                              directory for stdin).
+                              Use -style=\"{key: value, ...}\" to set specific
+                              parameters, e.g.:
+                                -style=\"{BasedOnStyle: llvm, IndentWidth: 8}\"
+DEFERRED OPTIONS (maybe one day):
+  -output-replacements-xml  - Output replacements as XML.
+  -sort-includes            - If set, overrides the include sorting behavior
+                              determined by the SortIncludes style flag
+  -cursor=<uint>            - The position of the cursor when invoking
+                              lisp-format from an editor integration
+  -dump-config              - Dump configuration options to stdout and exit.
+                              Can be used with -style option.
+  -version                  - Display the version of this program"))
+
+(getopts
+  ("-h" (show-help))
+  ("--help" (show-help))
+  ("-i" (setf inplace t))
+  ("-length" (push (string-to-number (pop argv)) lengths))
+  ("-lines" (push (mapcar #'string-to-number (split-string (pop argv) ":"))
+                  lines))
+  ("-offset" (push (string-to-number (pop argv)) offsets))
+  ("-style" (setf style (intern (concat ":" (pop argv))))))
+
+;;; 1. For every target file
+(do ((file (pop argv) (pop argv)))
+    ((null file))
+  (message "HANDLING FILE:%s" file)
+  ;;    0. Read the style file if one is present.
+  ;;    1. Indent (for every start/end pair)
+  ;;    2. Remove trailing whitespace (for every start/end pair)
+  )
