@@ -1,3 +1,4 @@
+#!/bin/bash
 :; exec emacs -Q --script "$0" -- "$@" # -*- emacs-lisp -*-
 
 ;;; Author: Eric Schulte <schulte.eric@gmail.com>
