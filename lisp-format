@@ -22,6 +22,8 @@
 ;;;     cat git-clang-format \
 ;;;         |sed 's/clang-format/lisp-format/g;s/clangFormat/lispFormat/' \
 ;;;         > git-lisp-format
+;;;     # find the definition of "default_extensions" and change to:
+;;;     #      default_extensions = ','.join(['lisp','cl','asd','scm','el'])
 ;;;     chmod +x git-lisp-format
 ;;;
 ;;; If the resulting git-lisp-format is added to your path then git
