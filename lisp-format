@@ -142,7 +142,31 @@ DEFERRED OPTIONS (maybe one day):
     (let ((lisp-format-file
            (find-file-recursively
             ".lisp-format" (file-name-directory (expand-file-name file)))))
-      (load lisp-format-file t t))))
+      (load lisp-format-file t t)))
+  ;; In a new buffer or visiting the file:
+  (save-window-excursion
+    (find-file file)
+    (let (point-ranges)
+      ;;    0. Figure out the regions in terms of points (offsets and lengths)
+      (if (or offsets lengths lines)
+          (progn
+            (loop for offset in offsets ; From offsets and lengths.
+                  for length in lengths
+                  do (push (cons offset (+ offset length)) point-ranges))
+            (mapc (lambda (range)                  ; From lines.
+                    (destructuring-bind (start end) range
+                      (push (cons (point-at-bol start) (point-at-eol end))
+                            point-ranges)))
+                  lines))
+        (setf point-ranges (list (cons (point-min) (point-max)))))
 
-
-
+      (mapc (lambda (pair)
+              (destructuring-bind (start . end) pair
+                ;; 1. Indent (for every start/end pair)
+                (indent-region start end)
+                ;; 2. Remove trailing whitespace (for every start/end pair)
+                (delete-trailing-whitespace start end)))
+            point-ranges))
+    (if inplace
+        (basic-save-buffer nil)
+      (princ (buffer-string)))))
