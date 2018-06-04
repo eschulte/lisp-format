@@ -1,17 +1,49 @@
 :; exec emacs -Q --script "$0" -- "$@" # -*- emacs-lisp -*-
 
-;;; Thanks to this fancy line above, run this file directly from the
-;;; command line as an executable.
+;;; Author: Eric Schulte <schulte.eric@gmail.com>
 
-;;; Should follow the specification of clang-format as closely as
-;;; possible.  This is the best standard in this space.
-
-;;; Structure:
-;;; 0. Parse options and arguments
-;;; 1. For every target file
-;;;    0. Read the style file if one is present.
-;;;    1. Indent (for every start/end pair)
-;;;    2. Remove trailing whitespace (for every start/end pair)
+;;; This lisp-format script aims to provide the same functionality as
+;;; clang-format only for lisp languages instead of for C languages.
+;;; Emacs is used as the tool to perform indentation.  The behavior of
+;;; clang-format is followed as closely as possible.
+;;;
+;;; This script is suitable for (re)formatting lisp code using an
+;;; external process.  This script may be marked as executable and
+;;; executed directly on the command line as follows.
+;;;
+;;;     chmod +x lisp-format
+;;;     ./lisp-format -h
+;;;
+;;; This script is appropriate for use in git commit hooks.  In fact
+;;; the git-clang-format script [1] may be trivially converted into a
+;;; git-lisp-format script as follows.
+;;;
+;;;     cat git-clang-format \
+;;;         |sed 's/clang-format/lisp-format/g;s/clangFormat/lispFormat/' \
+;;;         > git-lisp-format
+;;;     chmod +x git-lisp-format
+;;;
+;;; If the resulting git-lisp-format is added to your path then git
+;;; can execute this file by running "git lisp-format."
+;;;
+;;; See [2] for an example description of a work flow leveraging git
+;;; hooks and git-clang-format to ensure that code is well formatted
+;;; before every commit.  This work flow may be trivially adopted to
+;;; use git-lisp-format for lispy code.
+;;;
+;;; Clang-format allows for customized "styles" to be specified by
+;;; writing .clang-format files in the base of code repository and
+;;; passing the -style=file flag to clang-format.  Lisp-format
+;;; supports the same using .lisp-format files.  These files may hold
+;;; arbitrary emacs-lisp code, and they will be loaded before every
+;;; run of lisp-format.  An example file is shown below.
+;;;
+;;;     (put 'getopts 'lisp-indent-function 0)
+;;;     (put 'whenlet 'lisp-indent-function 1)
+;;;
+;;; [1] https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format
+;;; [2] https://dx13.co.uk/articles/2015/4/3/Setting-up-git-clang-format.html
+;;;
 (eval-when-compile (require 'cl))
 (require 'cl-lib)
 
@@ -46,11 +78,14 @@
                           `((starts-with-p ,(car form) ,arg)
                             (when (and (> (length ,arg) ,(length (car form)))
                                        (= ?\= (aref ,arg ,(length (car form)))))
-                              (push (subseq ,arg (1+ ,(length (car form)))) argv))
+                              (push (subseq ,arg (1+ ,(length (car form))))
+                                    argv))
                             ,@(cdr form)))
                         forms)
               ((starts-with-p "-" ,arg)
-               (abort 2 "lisp-format: Unknown command line argument '%s'.  Try: 'lisp-format -help'" ,arg))
+               (abort 2 (concat
+                         "lisp-format: Unknown command line argument '%s'."
+                         "  Try: 'lisp-format -help'") ,arg))
               (t (push ,arg argv) (return-from ,getopts-block)))))))
 
 (defun find-file-recursively (file directory)
@@ -134,7 +169,6 @@ DEFERRED OPTIONS (maybe one day):
 ;;; 1. For every target file
 (do ((file (pop argv) (pop argv)))
     ((null file))
-  (message "HANDLING FILE:%s" file)
   (unless (file-exists-p file)
     (abort "No such file or directory: '%s'" file))
   ;;    0. Read the style file if one is present.
@@ -142,7 +176,8 @@ DEFERRED OPTIONS (maybe one day):
     (let ((lisp-format-file
            (find-file-recursively
             ".lisp-format" (file-name-directory (expand-file-name file)))))
-      (load lisp-format-file t t)))
+      (let ((inhibit-message t))
+        (load lisp-format-file t t))))
   ;; In a new buffer or visiting the file:
   (save-window-excursion
     (find-file file)
@@ -163,7 +198,8 @@ DEFERRED OPTIONS (maybe one day):
       (mapc (lambda (pair)
               (destructuring-bind (start . end) pair
                 ;; 1. Indent (for every start/end pair)
-                (indent-region start end)
+                (let ((inhibit-message t))
+                  (indent-region start end))
                 ;; 2. Remove trailing whitespace (for every start/end pair)
                 (delete-trailing-whitespace start end)))
             point-ranges))
