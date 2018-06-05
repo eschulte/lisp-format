@@ -193,8 +193,11 @@ DEFERRED OPTIONS (maybe one day):
     (let ((lisp-format-file
            (find-file-recursively
             ".lisp-format" (file-name-directory (expand-file-name file)))))
-      (let ((inhibit-message t))
-        (load lisp-format-file t t))))
+      (if lisp-format-file
+          (let ((inhibit-message t))
+            (load lisp-format-file t t))
+        (error "No '.lisp-format' file found in '%s' or parent directories."
+               (file-name-directory (expand-file-name file))))))
   ;; In a new buffer or visiting the file:
   (save-window-excursion
     (find-file file)
