@@ -214,6 +214,8 @@ DEFERRED OPTIONS (maybe one day):
                               Can be used with -style option.
   -version                  - Display the version of this program"))
 
+
+;;;; Runtime
 ;;; (message "Command-line arguments:%S" argv)
 (getopts
   ("-h" (show-help))
