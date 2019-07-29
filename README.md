@@ -88,6 +88,11 @@ git config lispFormat.style "file"
 Running the above and adding a .lisp-format file to the based of a
 git repository enables customization of the lisp-format behavior.
 
+Currently lisp-format only exports a single configuration variable
+which may be customized to control the handling of tabs characters
+in formatted code.  See the documentation of
+*LISP-FORMAT-TAB-STOP* for details.
+
 [1] https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format
 
 [2] https://dx13.co.uk/articles/2015/4/3/Setting-up-git-clang-format.html
