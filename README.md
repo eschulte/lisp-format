@@ -91,7 +91,7 @@ git repository enables customization of the lisp-format behavior.
 Currently lisp-format only exports a single configuration variable
 which may be customized to control the handling of tabs characters
 in formatted code.  See the documentation of
-*LISP-FORMAT-TAB-STOP* for details.
+`*LISP-FORMAT-TAB-STOP*` for details.
 
 [1] https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format
 
