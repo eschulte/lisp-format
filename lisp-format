@@ -296,7 +296,7 @@ DEFERRED OPTIONS (maybe one day):
                 (delete-trailing-whitespace start end)
                 ;; 3. Convert tabs to spaces (for every start/end pair).
                 (case *lisp-format-use-tab*
-                  (:never (untabify start end)))))
+                  (:never (untabify start (min end (point-max)))))))
             point-ranges))
     (if inplace
         (basic-save-buffer nil)
