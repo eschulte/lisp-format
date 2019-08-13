@@ -107,9 +107,8 @@
 ;;; git repository enables customization of the lisp-format behavior.
 ;;;
 ;;; Currently lisp-format only exports a single configuration variable
-;;; which may be customized to control the handling of tabs characters
-;;; in formatted code.  See the documentation of
-;;; *LISP-FORMAT-TAB-STOP* for details.
+;;; which may be customized to run fixers on formatted regions of code.
+;;; See the documentation of `*LISP-FORMAT-FIXERS**` for details.
 ;;;
 ;;; [1] https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format
 ;;; [2] https://dx13.co.uk/articles/2015/4/3/Setting-up-git-clang-format.html
@@ -140,8 +139,31 @@
 (defvar lines nil)
 (defvar style :default)
 
-(defvar *lisp-format-use-tab* nil
-  "Set to :NEVER to remove all tab stops from formatted regions.")
+(defvar *lisp-format-fixers* nil
+  "User-configurable list of \"fixers\" to run on formatted regions.
+E.g., the following customization of this variable will remove
+all tabs:
+
+    (push #'untabify *lisp-format-fixers*)
+
+and the following will cause lisp-format to fix any trailing
+parenthesis (using paredit).
+
+    (defun fix-trailing-parens (start end &optional _arg)
+      \"Use `paredit-close-parenthesis' to fix trailing parens.\"
+      (interactive (if current-prefix-arg
+                       (list (point-min) (point-max) current-prefix-arg)
+                     (list (region-beginning) (region-end) nil)))
+      (let ((c (current-column)))
+        (save-excursion
+          (save-restriction
+            (narrow-to-region (point-min) end)
+            (goto-char start)
+            (while (re-search-forward \"^ *)\" nil t)
+              (forward-char -1)
+              (paredit-close-parenthesis))))
+        (move-to-column c)))
+    (push #'fix-trailing-parens *lisp-format-fixers*)")
 
 (defun starts-with-p (substring string)
   (let ((sub-length (length substring)))
@@ -294,9 +316,10 @@ DEFERRED OPTIONS (maybe one day):
                   (indent-region start end))
                 ;; 2. Remove trailing whitespace (for every start/end pair).
                 (delete-trailing-whitespace start end)
-                ;; 3. Convert tabs to spaces (for every start/end pair).
-                (case *lisp-format-use-tab*
-                  (:never (untabify start (min end (point-max)))))))
+                ;; 4. Call any user-defined fixup functions.
+                (mapc (lambda (fixer)
+                        (funcall fixer start (min end (point-max))))
+                      *lisp-format-fixers*)))
             point-ranges))
     (if inplace
         (basic-save-buffer nil)
