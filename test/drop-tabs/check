@@ -1,0 +1,14 @@
+#!/bin/bash
+# Ensure output has no tabs.
+if [ ! -f output.lisp ];then
+  echo "No output produced!"
+  exit 1
+else
+  if $(grep -qP "\t" output.lisp);then
+    echo "Tab remains in output.lisp."
+    exit 1
+  else
+    echo "Success."
+    exit 0
+  fi
+fi

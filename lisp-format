@@ -127,7 +127,7 @@
 (eval-when-compile (require 'cl))
 (require 'cl-lib)
 
-(setf debug-on-error t)                 ; More useful error messages.
+; (setf debug-on-error t)                 ; More useful error messages.
 
 (pop argv)                              ; Remove the leading "--".
 
@@ -318,7 +318,8 @@ DEFERRED OPTIONS (maybe one day):
                 (delete-trailing-whitespace start end)
                 ;; 4. Call any user-defined fixup functions.
                 (mapc (lambda (fixer)
-                        (funcall fixer start (min end (point-max))))
+                        (let ((inhibit-message t))
+                          (funcall fixer start (min end (point-max)))))
                       *lisp-format-fixers*)))
             point-ranges))
     (if inplace

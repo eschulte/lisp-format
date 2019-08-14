@@ -1,0 +1,2 @@
+;;;; -*- emacs-lisp -*-
+(pushnew #'untabify *lisp-format-fixers*)
