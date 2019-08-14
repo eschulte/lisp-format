@@ -1,0 +1,23 @@
+#!/bin/bash
+ERROR=2
+START=$(grep -n '(deftest asm-replace-operand-maintains-length ()' $1|cut -d: -f1)
+if [ -z "$START" ];then
+  START=0
+fi
+END=$((START + 7))
+OUTPUT=$(lisp-format -style=file -lines=$START:$END $1 2>/dev/null)
+
+if [ -z "$OUTPUT" ];then
+  # Fail if no output is produced.
+  ERROR=4
+else
+  echo "$OUTPUT"|grep -qP "\t"
+  if [ $? -eq 0 ];then
+    # Only pass if output produced and it contains a TAB.
+    ERROR=0
+  else
+    # Don't fail if output produced and no TAB.
+    ERROR=3
+  fi
+fi
+exit $ERROR

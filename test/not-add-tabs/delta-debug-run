@@ -1,0 +1,30 @@
+#!/bin/bash
+FILE=$(mktemp test-XXXXXXXX.lisp)
+ERROR=2
+function exit_hook (){
+  rm -f $FILE
+  exit $ERROR;}
+trap exit_hook SIGHUP SIGINT SIGTERM
+cat -- > $FILE
+# echo $FILE >&2
+START=$(grep -n '(deftest asm-replace-operand-maintains-length ()' $FILE|cut -d: -f1)
+if [ -z "$START" ];then
+  START=0
+fi
+END=$((START + 7))
+echo "-lines=$START:$END" >&2
+OUTPUT=$(lisp-format -style=file -lines=$START:$END $FILE 2>/dev/null)
+if [ -z "$OUTPUT" ];then
+  # Don't fail if no output is produced.
+  ERROR=0
+else
+  echo "$OUTPUT"|grep -qP "\t"
+  if [ $? -eq 0 ];then
+    # Only fail if output produced and it contains a TAB.
+    ERROR=3
+  else
+    # Don't fail if output produced and no TAB.
+    ERROR=0
+  fi
+fi
+exit $ERROR
