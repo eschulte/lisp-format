@@ -1,3 +1,5 @@
+SHELL=bash
+
 TEST_DIR=test
 TESTS=drop-tabs
 
@@ -14,6 +16,9 @@ check/%: $(TEST_DIR)/%
 	fi
 
 check: $(addprefix check/, $(TESTS))
+
+show/%: $(TEST_DIR)/%
+	-@diff -U4 --color=always $^/{example,output}.lisp|sed '4,$$ { s/\t/ [TAB]  /g}'
 
 clean:
 	rm -f test/*/output.lisp
