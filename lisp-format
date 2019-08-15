@@ -127,12 +127,8 @@
 (eval-when-compile (require 'cl))
 (require 'cl-lib)
 
-; (setf debug-on-error t)                 ; More useful error messages.
-
-(pop argv)                              ; Remove the leading "--".
-
 
-;;; 0. Process the options and arguments (files).
+;;; Variables and functions
 (defvar inplace nil)
 (defvar offsets nil)
 (defvar lengths nil)
@@ -264,22 +260,7 @@ DEFERRED OPTIONS (maybe one day):
                               Can be used with -style option.
   -version                  - Display the version of this program"))
 
-
-;;;; Runtime
-;;; (message "Command-line arguments:%S" argv)
-(getopts
-  ("-h" (show-help))
-  ("--help" (show-help))
-  ("-i" (setf inplace t))
-  ("-length" (push (string-to-number (pop argv)) lengths))
-  ("-lines" (push (mapcar #'string-to-number (split-string (pop argv) ":"))
-                  lines))
-  ("-offset" (push (string-to-number (pop argv)) offsets))
-  ("-style" (setf style (intern (concat ":" (pop argv))))))
-
-;;; 1. For every target file
-(do ((file (pop argv) (pop argv)))
-    ((null file))
+(defun lisp-format-process-file (file)
   (unless (file-exists-p file)
     (abort "No such file or directory: '%s'" file))
   ;;    0. Read the style file if one is present.
@@ -325,3 +306,25 @@ DEFERRED OPTIONS (maybe one day):
     (if inplace
         (basic-save-buffer nil)
       (princ (buffer-string)))))
+
+
+;;;; Actual runtime code
+
+;;; (message "Command-line arguments:%S" argv)
+;;; (setf debug-on-error t)             ; More useful error messages.
+(pop argv)                              ; Remove the leading "--".
+
+(getopts
+  ("-h" (show-help))
+  ("--help" (show-help))
+  ("-i" (setf inplace t))
+  ("-length" (push (string-to-number (pop argv)) lengths))
+  ("-lines" (push (mapcar #'string-to-number (split-string (pop argv) ":"))
+                  lines))
+  ("-offset" (push (string-to-number (pop argv)) offsets))
+  ("-style" (setf style (intern (concat ":" (pop argv))))))
+
+;;; Process every file specified on the command line.
+(do ((file (pop argv) (pop argv)))
+    ((null file))
+  (lisp-format-process-file file))
