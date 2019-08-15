@@ -92,6 +92,11 @@ Currently lisp-format only exports a single configuration variable
 which may be customized to run fixers on formatted regions of code.
 See the documentation of `*LISP-FORMAT-FIXERS**` for details.
 
+User-specific customization of lisp-format may be accomplished by
+writing emacs-lisp code to an configuration file named
+"~/.lisp-formatrc" in the users home directory.  This may be useful
+for adding directories to the load path searched by lisp-format.
+
 [1] https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format
 
 [2] https://dx13.co.uk/articles/2015/4/3/Setting-up-git-clang-format.html

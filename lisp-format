@@ -110,6 +110,12 @@
 ;;; which may be customized to run fixers on formatted regions of code.
 ;;; See the documentation of `*LISP-FORMAT-FIXERS**` for details.
 ;;;
+;;; User-specific customization of lisp-format may be accomplished by
+;;; writing emacs-lisp code to an configuration file named
+;;; "~/.lisp-formatrc" in the users home directory.  This may be
+;;; useful for adding directories to the load path searched by
+;;; lisp-format.
+;;;
 ;;; [1] https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format
 ;;; [2] https://dx13.co.uk/articles/2015/4/3/Setting-up-git-clang-format.html
 ;;; [3] .git/hooks/pre-commit
@@ -315,6 +321,12 @@ DEFERRED OPTIONS (maybe one day):
 
 
 ;;;; Actual runtime code
+
+;;; Load a global .lisp-formatrc file when present.
+(let ((lisp-format-rc-file "~/.lisp-formatrc"))
+  (when (file-exists-p lisp-format-rc-file)
+    (let ((inhibit-message t))
+      (load lisp-format-rc-file nil t t))))
 
 ;;; (message "Command-line arguments:%S" argv)
 ;;; (setf debug-on-error t)             ; More useful error messages.
