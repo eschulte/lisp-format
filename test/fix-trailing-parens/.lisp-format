@@ -1,0 +1,16 @@
+(require 'paredit)
+(defun fix-trailing-parens (start end &optional _arg)
+  "Use `paredit-close-parenthesis' to fix trailing parens."
+  (interactive (if current-prefix-arg
+                   (list (point-min) (point-max) current-prefix-arg)
+                 (list (region-beginning) (region-end) nil)))
+  (let ((c (current-column)))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region (point-min) end)
+        (goto-char start)
+        (while (re-search-forward "^ *)" nil t)
+        (forward-char -1)
+        (paredit-close-parenthesis))))
+  (move-to-column c)))
+(pushnew 'fix-trailing-parens *lisp-format-fixers*)

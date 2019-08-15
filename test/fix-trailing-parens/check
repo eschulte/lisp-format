@@ -1,0 +1,15 @@
+#!/bin/bash
+# Ensure output has no tabs.
+if [ ! -f output.lisp ];then
+  echo "No output produced!"
+  exit 1
+else
+  # The 'grep -v' drops the line that had tabs in the original.
+  if $(grep -qP "^[[:space:]]\)" output.lisp);then
+    echo "Trailing parens in output.lisp."
+    exit 1
+  else
+    echo "No trailing parens in output.lisp."
+    exit 0
+  fi
+fi

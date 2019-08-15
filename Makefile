@@ -4,7 +4,8 @@ TEST_DIR=test
 TESTS=				\
 	drop-tabs		\
 	not-add-tabs		\
-	add-tabs-default
+	add-tabs-default	\
+	fix-trailing-parens
 
 all: check
 

@@ -329,7 +329,7 @@ DEFERRED OPTIONS (maybe one day):
       (load lisp-format-rc-file nil t t))))
 
 ;;; (message "Command-line arguments:%S" argv)
-;;; (setf debug-on-error t)             ; More useful error messages.
+(setf debug-on-error t)             ; More useful error messages.
 (pop argv)                              ; Remove the leading "--".
 
 (getopts
