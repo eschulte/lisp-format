@@ -136,7 +136,7 @@
 (defvar style :default)
 
 (defvar *lisp-format-fixers*
-  '(#'indent-region #'delete-trailing-whitespace)
+  '(indent-region delete-trailing-whitespace)
   "User-configurable list of \"fixers\" used to format regions.
 By default only indentation and trailing whitespace removal are
 applied.  The following customization of this variable will
@@ -275,11 +275,11 @@ DEFERRED OPTIONS (maybe one day):
             (load lisp-format-file nil t t))
         (error "No '.lisp-format' file found in '%s' or parent directories."
                (file-name-directory (expand-file-name file))))))
-  ;; In a new buffer or visiting the file:
+  ;; In a new buffer visiting the file:
   (save-window-excursion
     (find-file file)
     (let (point-ranges)
-      ;;    0. Figure out the regions in terms of points (offsets and lengths)
+      ;; Figure out the regions in terms of points (offsets and lengths).
       (if (or offsets lengths lines)
           (progn
             (loop for offset in offsets ; From offsets and lengths.
@@ -291,7 +291,7 @@ DEFERRED OPTIONS (maybe one day):
                             point-ranges)))
                   lines))
         (setf point-ranges (list (cons (point-min) (point-max)))))
-
+      ;; Format all point ranges.
       (mapc (lambda (pair)
               (destructuring-bind (start . end) pair
                 (mapc (lambda (fixer)
