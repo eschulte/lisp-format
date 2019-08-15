@@ -135,10 +135,12 @@
 (defvar lines nil)
 (defvar style :default)
 
-(defvar *lisp-format-fixers* nil
-  "User-configurable list of \"fixers\" to run on formatted regions.
-E.g., the following customization of this variable will remove
-all tabs:
+(defvar *lisp-format-fixers*
+  '(#'indent-region #'delete-trailing-whitespace)
+  "User-configurable list of \"fixers\" used to format regions.
+By default only indentation and trailing whitespace removal are
+applied.  The following customization of this variable will
+remove all tabs:
 
     (push #'untabify *lisp-format-fixers*)
 
@@ -292,12 +294,6 @@ DEFERRED OPTIONS (maybe one day):
 
       (mapc (lambda (pair)
               (destructuring-bind (start . end) pair
-                ;; 1. Indent (for every start/end pair).
-                (let ((inhibit-message t))
-                  (indent-region start end))
-                ;; 2. Remove trailing whitespace (for every start/end pair).
-                (delete-trailing-whitespace start end)
-                ;; 4. Call any user-defined fixup functions.
                 (mapc (lambda (fixer)
                         (let ((inhibit-message t))
                           (funcall fixer start (min end (point-max)))))
