@@ -90,7 +90,16 @@ git repository enables customization of the lisp-format behavior.
 
 Currently lisp-format only exports a single configuration variable
 which may be customized to run fixers on formatted regions of code.
-See the documentation of `*LISP-FORMAT-FIXERS**` for details.
+See the documentation of `*LISP-FORMAT-FIXERS**` for details.  For
+example to remove all tabs add the following:
+
+```lisp
+;; NOTE: unless indent-tabs-mode is `set-default' to nil
+;; subsequent fixers after untabify could themselves add
+;; tabs.
+(set-default 'indent-tabs-mode nil)
+(push 'untabify *lisp-format-fixers*)
+```
 
 User-specific customization of lisp-format may be accomplished by
 writing emacs-lisp code to an configuration file named

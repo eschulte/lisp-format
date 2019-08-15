@@ -107,8 +107,15 @@
 ;;; git repository enables customization of the lisp-format behavior.
 ;;;
 ;;; Currently lisp-format only exports a single configuration variable
-;;; which may be customized to run fixers on formatted regions of code.
-;;; See the documentation of `*LISP-FORMAT-FIXERS**` for details.
+;;; which may be customized to run fixers on formatted regions of
+;;; code.  See the documentation of `*LISP-FORMAT-FIXERS**` for
+;;; details.  For example to remove all tabs add the following:
+;;;
+;;;     ;; NOTE: unless indent-tabs-mode is `set-default' to nil
+;;;     ;; subsequent fixers after untabify could themselves add
+;;;     ;; tabs.
+;;;     (set-default 'indent-tabs-mode nil)
+;;;     (push 'untabify *lisp-format-fixers*)
 ;;;
 ;;; User-specific customization of lisp-format may be accomplished by
 ;;; writing emacs-lisp code to an configuration file named
@@ -148,7 +155,11 @@ By default only indentation and trailing whitespace removal are
 applied.  The following customization of this variable will
 remove all tabs:
 
-    (push #'untabify *lisp-format-fixers*)
+    ;; NOTE: unless indent-tabs-mode is `set-default' to nil
+    ;; subsequent fixers after untabify could themselves add
+    ;; tabs.
+    (set-default 'indent-tabs-mode nil)
+    (push 'untabify *lisp-format-fixers*)
 
 and the following will cause lisp-format to fix any trailing
 parenthesis (using paredit).
@@ -167,7 +178,7 @@ parenthesis (using paredit).
               (forward-char -1)
               (paredit-close-parenthesis))))
         (move-to-column c)))
-    (push #'fix-trailing-parens *lisp-format-fixers*)")
+    (push 'fix-trailing-parens *lisp-format-fixers*)")
 
 (defun starts-with-p (substring string)
   (let ((sub-length (length substring)))
