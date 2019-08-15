@@ -1,9 +1,10 @@
 SHELL=bash
 
 TEST_DIR=test
-TESTS=			\
-	drop-tabs	\
-	not-add-tabs
+TESTS=				\
+	drop-tabs		\
+	not-add-tabs		\
+	add-tabs-default
 
 all: check
 

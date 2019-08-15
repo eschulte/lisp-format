@@ -1,0 +1,15 @@
+#!/bin/bash
+# Ensure output has no tabs.
+if [ ! -f output.lisp ];then
+  echo "No output produced!"
+  exit 1
+else
+  # The 'grep -v' drops the line that had tabs in the original.
+  if $(grep -v ":object variant" output.lisp|grep -qP "\t");then
+    echo "Indented with tabs in in output.lisp."
+    exit 0
+  else
+    echo "Indented with spaces."
+    exit 1
+  fi
+fi
