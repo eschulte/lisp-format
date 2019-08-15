@@ -262,6 +262,12 @@ DEFERRED OPTIONS (maybe one day):
                               Can be used with -style option.
   -version                  - Display the version of this program"))
 
+(defvar *debug-out-counter* 0)
+(defun debug-out ()
+  (write-region (point-min) (point-max)
+                (format "/tmp/lisp-format-debug-%03d" *debug-out-counter*))
+  (incf *debug-out-counter*))
+
 (defun lisp-format-process-file (file)
   (unless (file-exists-p file)
     (abort "No such file or directory: '%s'" file))
@@ -292,13 +298,17 @@ DEFERRED OPTIONS (maybe one day):
                   lines))
         (setf point-ranges (list (cons (point-min) (point-max)))))
       ;; Format all point ranges.
+      ;; (debug-out)
       (mapc (lambda (pair)
               (destructuring-bind (start . end) pair
                 (mapc (lambda (fixer)
                         (let ((inhibit-message t))
-                          (funcall fixer start (min end (point-max)))))
+                          (funcall fixer start (min end (point-max)))
+                          ;; (debug-out)
+                          ))
                       *lisp-format-fixers*)))
             point-ranges))
+    ;; (debug-out)
     (if inplace
         (basic-save-buffer nil)
       (princ (buffer-string)))))
