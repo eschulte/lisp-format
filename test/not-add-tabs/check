@@ -4,7 +4,8 @@ if [ ! -f output.lisp ];then
   echo "No output produced!"
   exit 1
 else
-  if $(grep -qP "\t" output.lisp);then
+  # The 'grep -v' drops the line that had tabs in the original.
+  if $(grep -v ":object variant" output.lisp|grep -qP "\t");then
     echo "Tab remains in output.lisp."
     exit 1
   else

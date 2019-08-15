@@ -1,0 +1,2 @@
+;;; With this set tabs should not be used by default.
+(set-default 'indent-tabs-mode nil)
