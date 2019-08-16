@@ -1,0 +1,10 @@
+#!/bin/bash
+FILE=$(mktemp test-XXXXXXXX.lisp)
+ERROR=0
+function exit_hook (){
+  rm -f $FILE
+  exit $ERROR;}
+trap exit_hook SIGHUP SIGINT SIGTERM
+cat -- > $FILE
+# echo $FILE >&2
+timeout 10 lisp-format -style=file -lines=0:$(wc -l $FILE) $FILE >/dev/null 2>/dev/null

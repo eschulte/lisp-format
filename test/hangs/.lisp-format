@@ -1,0 +1,111 @@
+;;;; -*- emacs-lisp -*-
+(mapc (lambda (dir) (add-to-list 'load-path dir))
+      (directory-files (concat (getenv "QUICK_LISP")
+                               "/dists/quicklisp/software/") t "slime-v*"))
+(require 'slime)
+(require 'paredit)
+
+(set-default 'indent-tabs-mode nil)
+(pushnew 'untabify *lisp-format-fixers*)
+
+(defun fix-trailing-parens (start end &optional _arg)
+  "Use `paredit-close-parenthesis' to fix trailing parens."
+  (interactive (if current-prefix-arg
+                   (list (point-min) (point-max) current-prefix-arg)
+                 (list (region-beginning) (region-end) nil)))
+  (let ((c (current-column)))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region (point-min) end)
+        (goto-char start)
+        (while (re-search-forward "^ *)" nil t)
+        (forward-char -1)
+        (paredit-close-parenthesis))))
+  (move-to-column c)))
+(pushnew 'fix-trailing-parens *lisp-format-fixers*)
+
+;;; Syntax table extension for curry-compose-reader-macros
+(modify-syntax-entry ?\[ "(]" lisp-mode-syntax-table)
+(modify-syntax-entry ?\] ")[" lisp-mode-syntax-table)
+(modify-syntax-entry ?\{ "(}" lisp-mode-syntax-table)
+(modify-syntax-entry ?\} "){" lisp-mode-syntax-table)
+(modify-syntax-entry ?\« "(»" lisp-mode-syntax-table)
+(modify-syntax-entry ?\» ")«" lisp-mode-syntax-table)
+
+;;; Specify indentation levels for specific functions.
+(mapc (lambda (pair) (put (first pair) 'lisp-indent-function (second pair)))
+      '((make-instance 1)
+        (if-let 1)
+        (if-let* 1)
+        (when-let 1)
+        (when-let* 1)
+        (defixture 1)))
+
+;;; Work around a bug in `lisp-indent-calc-next' in which it can hang
+;;; on a dangling unmatched |# character.  The change in the code
+;;; below against the original is the addition of the block and the
+;;; throw to the block when we're in the same position (the newly
+;;; added last-last-sexp matches last-sexp).  Since I'm not sure if it
+;;; is possible in normal execution for last-sexp to stay the same I
+;;; only abort if this happens 100 times in a row (pretty cheap).
+(defun lisp-indent-calc-next (state)
+  "Move to next line and return calculated indent for it.
+STATE is updated by side effect, the first state should be
+created by `lisp-indent-initial-state'.  This function may move
+by more than one line to cross a string literal."
+  (pcase-let* (((cl-struct lisp-indent-state
+                           (stack indent-stack) ppss ppss-point)
+                state)
+               (indent-depth (car ppss)) ; Corresponding to indent-stack.
+               (depth indent-depth)
+               (last-last-sexp nil) (counter 0))
+    (block nil
+      ;; Parse this line so we can learn the state to indent the
+      ;; next line.
+      (while (let ((last-sexp (nth 2 ppss)))
+               (setq ppss (parse-partial-sexp
+                           ppss-point (progn (end-of-line) (point))
+                           nil nil ppss))
+               ;; Preserve last sexp of state (position 2) for
+               ;; `calculate-lisp-indent', if we're at the same depth.
+               (if (and (not (nth 2 ppss)) (= depth (car ppss)))
+                   (setf (nth 2 ppss) last-sexp)
+                 (setq last-sexp (nth 2 ppss)))
+               (setq depth (car ppss))
+               (if (and (>= counter 100) (equal last-sexp last-last-sexp))
+                   (progn (setf indent-stack nil) (return))
+                 (setq last-last-sexp last-sexp
+                       counter (1+ counter)))
+               ;; Skip over newlines within strings.
+               (nth 3 ppss))
+        (let ((string-start (nth 8 ppss)))
+          (setq ppss (parse-partial-sexp (point) (point-max)
+                                         nil nil ppss 'syntax-table))
+          (setf (nth 2 ppss) string-start) ; Finished a complete string.
+          (setq depth (car ppss)))
+        (setq ppss-point (point)))
+      (setq ppss-point (point))
+      (let* ((depth-delta (- depth indent-depth)))
+        (cond ((< depth-delta 0)
+               (setq indent-stack (nthcdr (- depth-delta) indent-stack)))
+              ((> depth-delta 0)
+               (setq indent-stack (nconc (make-list depth-delta nil)
+                                         indent-stack))))))
+
+    (prog1
+        (let (indent)
+          (cond ((= (forward-line 1) 1) nil)
+                ;; Negative depth, probably some kind of syntax error.
+                ((null indent-stack)
+                 ;; Reset state.
+                 (setq ppss (parse-partial-sexp (point) (point))))
+                ((car indent-stack))
+                ((integerp (setq indent (calculate-lisp-indent ppss)))
+                 (setf (car indent-stack) indent))
+                ((consp indent)       ; (COLUMN CONTAINING-SEXP-START)
+                 (car indent))
+                ;; This only happens if we're in a string.
+                (t (error "This shouldn't happen"))))
+      (setf (lisp-indent-state-stack state) indent-stack)
+      (setf (lisp-indent-state-ppss-point state) ppss-point)
+      (setf (lisp-indent-state-ppss state) ppss))))
