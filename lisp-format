@@ -147,6 +147,7 @@
 (defvar lengths nil)
 (defvar lines nil)
 (defvar style :default)
+(defvar verbose nil)
 
 (defvar *lisp-format-fixers*
   '(indent-region delete-trailing-whitespace)
@@ -233,6 +234,7 @@ result is written to the standard output.
 USAGE: lisp-format [options] [<file> ...]
 
 OPTIONS:
+  -verbose                  - Turn on verbose output.
   -assume-filename=<string> - When reading from stdin, lisp-format assumes this
                               filename to look for a style config file (with
                               -style=file) and to determine the language.
@@ -294,7 +296,7 @@ DEFERRED OPTIONS (maybe one day):
            (find-file-recursively
             ".lisp-format" (file-name-directory (expand-file-name file)))))
       (if lisp-format-file
-          (let ((inhibit-message t))
+          (let ((inhibit-message (if verbose nil t)))
             (load lisp-format-file nil t t))
         (error "No '.lisp-format' file found in '%s' or parent directories."
                (file-name-directory (expand-file-name file))))))
@@ -320,7 +322,7 @@ DEFERRED OPTIONS (maybe one day):
       (mapc (lambda (pair)
               (destructuring-bind (start . end) pair
                 (mapc (lambda (fixer)
-                        (let ((inhibit-message t))
+                        (let ((inhibit-message (if verbose nil t)))
                           (funcall fixer start (min end (point-max)))
                           ;; (debug-out)
                           ))
@@ -337,16 +339,16 @@ DEFERRED OPTIONS (maybe one day):
 ;;; Load a global .lisp-formatrc file when present.
 (let ((lisp-format-rc-file "~/.lisp-formatrc"))
   (when (file-exists-p lisp-format-rc-file)
-    (let ((inhibit-message t))
+    (let ((inhibit-message (if verbose nil t)))
       (load lisp-format-rc-file nil t t))))
 
 ;;; (message "Command-line arguments:%S" argv)
-;;; (setf debug-on-error t)             ; More useful error messages.
 (pop argv)                              ; Remove the leading "--".
 
 (getopts
   ("-h" (show-help))
   ("--help" (show-help))
+  ("-verbose" (progn (setf verbose t) (setf debug-on-error t)))
   ("-i" (setf inplace t))
   ("-length" (push (string-to-number (pop argv)) lengths))
   ("-lines" (push (mapcar #'string-to-number (split-string (pop argv) ":"))
