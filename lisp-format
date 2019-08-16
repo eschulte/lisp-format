@@ -314,6 +314,7 @@ DEFERRED OPTIONS (maybe one day):
                             point-ranges)))
                   lines))
         (setf point-ranges (list (cons (point-min) (point-max)))))
+      (setf point-ranges (sort point-ranges (lambda (a b) (> (car a) (car b)))))
       ;; Format all point ranges.
       ;; (debug-out)
       (mapc (lambda (pair)
