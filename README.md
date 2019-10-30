@@ -15,33 +15,10 @@ chmod +x lisp-format
 ./lisp-format -h
 ```
 
-This script is appropriate for use in git commit hooks.
+This script is appropriate for use in git commit hooks, see
+[Running lisp-format git hooks](#running-lisp-format-git-hooks).
 
-
-This script is appropriate for use in git commit hooks.  In fact
-the git-clang-format script [1] may be fairly trivially converted
-into a git-lisp-format script by replacing "clang" with "lisp" and
-changing the in-scope file extensions as follows.
-
-```shell
-curl https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format \
-    |sed \
-    "s/clang-format/lisp-format/g;s/clangFormat/lispFormat/;
-     s/default_extensions =.*\$/default_extensions = ','.join(['lisp','cl','asd','scm','el'])/;
-     /# From clang\/lib\/Frontend\/FrontendOptions.cpp, all lower case/,/])/d" \
-    > /usr/bin/git-lisp-format
-
-chmod +x /usr/bin/git-lisp-format
-```
-
-After the resulting git-lisp-format is added to your path then git can
-execute this file by running "git lisp-format."
-
-See [2] for an example description of a work flow leveraging git hooks
-and git-clang-format to ensure that code is well formatted before
-every commit (i.e., by adding [3] to an executable file named
-pre-commit in a repository's .git/hooks/ directory).  This work flow
-may be trivially adopted to use git-lisp-format for lispy code.
+## Customizing lisp-format
 
 Clang-format allows for customized "styles" to be specified by
 writing .clang-format files in the base of code repository and
@@ -101,19 +78,49 @@ example to remove all tabs add the following:
 (push 'untabify *lisp-format-fixers*)
 ```
 
-User-specific customization of lisp-format may be accomplished by
-writing emacs-lisp code to an configuration file named
-"~/.lisp-formatrc" in the users home directory.  This may be useful
-for adding directories to the load path searched by lisp-format.
+## Running lisp-format git hooks
 
-[1] https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format
+The lisp-format script is appropriate for use in git commit hooks.  In
+fact the git-clang-format script[^git-clang-format] may be fairly
+trivially converted into a git-lisp-format script by replacing "clang"
+with "lisp" and changing the in-scope file extensions as follows.
 
-[2] https://dx13.co.uk/articles/2015/4/3/Setting-up-git-clang-format.html
+```shell
+curl https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format \
+    |sed \
+    "s/clang-format/lisp-format/g;s/clangFormat/lispFormat/;
+     s/default_extensions =.*\$/default_extensions = ','.join(['lisp','cl','asd','scm','el'])/;
+     /# From clang\/lib\/Frontend\/FrontendOptions.cpp, all lower case/,/])/d" \
+    > /usr/bin/git-lisp-format
 
-[3] `.git/hooks/pre-commit`
+chmod +x /usr/bin/git-lisp-format
+```
+
+[^git-clang-format] https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format
+
+After the resulting git-lisp-format is added to your path then git can
+execute this file by running "git lisp-format."
+
+See
+[setting up git clang format](https://dx13.co.uk/articles/2015/4/3/Setting-up-git-clang-format.html)
+for an example description of a work flow leveraging git hooks and
+git-clang-format to ensure that code is well formatted before every
+commit (i.e., by writing the following shell code to an executable
+file named `pre-commit` in a repository's `.git/hooks/` directory).
+This work flow may be trivially adopted to use git-lisp-format for
+lispy code.
+
+It is relatively easy to configure git to run lisp-format before every
+commit, and reject commits which are not well formatted.  The
+following two subsections describe how to do this using a [Pre-commit
+hook shell script](#pre-commit-hook-shell-script) or using the
+[Pre-commit framework](#pre-commit-framework).
+
+### Pre-commit hook shell script
 
 ```shell
 #!/bin/bash
+# pre-commit shell script to run git-lisp-format.
 OUTPUT=$(git lisp-format --diff)
 if [ "${OUTPUT}" == "no modified files to format" ] ||
    [ "${OUTPUT}" == "lisp-format did not modify any files" ];then
@@ -123,3 +130,20 @@ else
     exit 1
 fi
 ```
+
+### Pre-commit framework
+
+User-specific customization of lisp-format may be accomplished by
+writing emacs-lisp code to an configuration file named
+`~/.lisp-formatrc` in the users home directory.  This may be useful
+for adding directories to the load path searched by lisp-format.
+
+The `.pre-commit-hooks.yaml` file in this directory provides a
+[pre-commit framework](https://pre-commit.com/) hook for running
+lisp-format.  This hook requires the pre-commit framework to be
+installed on your system and configured for each git repository. For
+more information please refer to:
+- [pre-commit installation](https://pre-commit.com/#install)
+- [pre-commit plugins](https://pre-commit.com/#plugins) (`.pre-commit-config.yaml`)
+- [pre-commit usage](https://pre-commit.com/#usage)
+- [pre-commit hook list](https://pre-commit.com/hooks.html)
