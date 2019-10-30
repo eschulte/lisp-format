@@ -4,4 +4,3 @@
   language: system
   files: \.(lisp|cl|asd|scm|el)$
   entry: lisp-format -i
-  args: ["-style=file"]
