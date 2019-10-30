@@ -81,9 +81,11 @@ example to remove all tabs add the following:
 ## Running lisp-format git hooks
 
 The lisp-format script is appropriate for use in git commit hooks.  In
-fact the git-clang-format script[^git-clang-format] may be fairly
-trivially converted into a git-lisp-format script by replacing "clang"
-with "lisp" and changing the in-scope file extensions as follows.
+fact the
+[git-clang-format script](https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format)
+may be fairly trivially converted into a git-lisp-format script by
+replacing "clang" with "lisp" and changing the in-scope file
+extensions as follows.
 
 ```shell
 curl https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format \
@@ -95,8 +97,6 @@ curl https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-fo
 
 chmod +x /usr/bin/git-lisp-format
 ```
-
-[^git-clang-format] https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format
 
 After the resulting git-lisp-format is added to your path then git can
 execute this file by running "git lisp-format."
