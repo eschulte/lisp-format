@@ -88,7 +88,7 @@ replacing "clang" with "lisp" and changing the in-scope file
 extensions as follows.
 
 ```shell
-curl https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format \
+curl -s https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format \
     |sed \
     "s/clang-format/lisp-format/g;s/clangFormat/lispFormat/;
      s/default_extensions =.*\$/default_extensions = ','.join(['lisp','cl','asd','scm','el'])/;
@@ -102,7 +102,7 @@ After the resulting git-lisp-format is added to your path then git can
 execute this file by running "git lisp-format."
 
 See
-[setting up git clang format](https://dx13.co.uk/articles/2015/4/3/Setting-up-git-clang-format.html)
+[setting up git clang format](https://dx13.co.uk/articles/2015/04/03/setting-up-git-clang-format/)
 for an example description of a work flow leveraging git hooks and
 git-clang-format to ensure that code is well formatted before every
 commit (i.e., by writing the following shell code to an executable
