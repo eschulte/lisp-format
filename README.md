@@ -62,7 +62,7 @@ command (run in a git repository).
 git config lispFormat.style "file"
 ```
 
-Running the above and adding a .lisp-format file to the based of a
+Running the above and adding a `.lisp-format` file to the base of a
 git repository enables customization of the lisp-format behavior.
 
 Currently lisp-format only exports a single configuration variable
@@ -77,6 +77,14 @@ example to remove all tabs add the following:
 (set-default 'indent-tabs-mode nil)
 (push 'untabify *lisp-format-fixers*)
 ```
+
+## User-specific customization
+
+User-specific customization of lisp-format may be accomplished by
+writing emacs-lisp code to an configuration file named
+`~/.lisp-formatrc` in the users home directory.  This may be useful
+for adding directories to the load path searched by lisp-format.
+
 
 ## Running lisp-format git hooks
 
@@ -132,11 +140,6 @@ fi
 ```
 
 ### Pre-commit framework
-
-User-specific customization of lisp-format may be accomplished by
-writing emacs-lisp code to an configuration file named
-`~/.lisp-formatrc` in the users home directory.  This may be useful
-for adding directories to the load path searched by lisp-format.
 
 The `.pre-commit-hooks.yaml` file in this directory provides a
 [pre-commit framework](https://pre-commit.com/) hook for running
