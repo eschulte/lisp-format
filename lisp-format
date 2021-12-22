@@ -137,7 +137,6 @@
 ;;;             exit 1
 ;;;         fi
 ;;;
-(eval-when-compile (require 'cl))
 (require 'cl-lib)
 
 
@@ -184,7 +183,7 @@ parenthesis (using paredit).
 (defun starts-with-p (substring string)
   (let ((sub-length (length substring)))
     (and (>= (length string) sub-length)
-         (string= (subseq string 0 sub-length) substring))))
+         (string= (cl-subseq string 0 sub-length) substring))))
 
 (defun abort (code fmt &rest args)
   (apply #'message fmt args)
@@ -195,14 +194,14 @@ parenthesis (using paredit).
   "Collect command-line options from ARGS in an executable."
   (let ((arg (gensym))
         (getopts-block (gensym)))
-    `(block ,getopts-block
-       (loop for ,arg = (pop argv) while ,arg do
+    `(cl-block ,getopts-block
+       (cl-loop for ,arg = (pop argv) while ,arg do
              (cond
               ,@(mapcar (lambda (form)
                           `((starts-with-p ,(car form) ,arg)
                             (when (and (> (length ,arg) ,(length (car form)))
                                        (= ?\= (aref ,arg ,(length (car form)))))
-                              (push (subseq ,arg (1+ ,(length (car form))))
+                              (push (cl-subseq ,arg (1+ ,(length (car form))))
                                     argv))
                             ,@(cdr form)))
                         forms)
@@ -210,7 +209,7 @@ parenthesis (using paredit).
                (abort 2 (concat
                          "lisp-format: Unknown command line argument '%s'."
                          "  Try: 'lisp-format -help'") ,arg))
-              (t (push ,arg argv) (return-from ,getopts-block)))))))
+              (t (push ,arg argv) (cl-return-from ,getopts-block)))))))
 
 (defun find-file-recursively (file directory)
   (let ((current (expand-file-name file directory)))
@@ -285,7 +284,7 @@ DEFERRED OPTIONS (maybe one day):
 (defun debug-out ()
   (write-region (point-min) (point-max)
                 (format "/tmp/lisp-format-debug-%03d" *debug-out-counter*))
-  (incf *debug-out-counter*))
+  (cl-incf *debug-out-counter*))
 
 (defun lisp-format-process-file (file)
   (unless (file-exists-p file)
@@ -307,11 +306,11 @@ DEFERRED OPTIONS (maybe one day):
       ;; Figure out the regions in terms of points (offsets and lengths).
       (if (or offsets lengths lines)
           (progn
-            (loop for offset in offsets ; From offsets and lengths.
+            (cl-loop for offset in offsets ; From offsets and lengths.
                   for length in lengths
                   do (push (cons offset (+ offset length)) point-ranges))
             (mapc (lambda (range)                  ; From lines.
-                    (destructuring-bind (start end) range
+                    (cl-destructuring-bind (start end) range
                       (push (cons (point-at-bol start) (point-at-eol end))
                             point-ranges)))
                   lines))
@@ -320,7 +319,7 @@ DEFERRED OPTIONS (maybe one day):
       ;; Format all point ranges.
       ;; (debug-out)
       (mapc (lambda (pair)
-              (destructuring-bind (start . end) pair
+              (cl-destructuring-bind (start . end) pair
                 (mapc (lambda (fixer)
                         (let ((inhibit-message (if verbose nil t)))
                           (funcall fixer start (min end (point-max)))
@@ -357,6 +356,6 @@ DEFERRED OPTIONS (maybe one day):
   ("-style" (setf style (intern (concat ":" (pop argv))))))
 
 ;;; Process every file specified on the command line.
-(do ((file (pop argv) (pop argv)))
+(cl-do ((file (pop argv) (pop argv)))
     ((null file))
   (lisp-format-process-file file))
