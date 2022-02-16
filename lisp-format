@@ -46,7 +46,7 @@
 ;;; into a git-lisp-format script by replacing "clang" with "lisp" and
 ;;; changing the in-scope file extensions as follows.
 ;;;
-;;;     curl https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format \
+;;;     curl https://raw.githubusercontent.com/llvm-mirror/clang/master/tools/clang-format/git-clang-format \
 ;;;         |sed \
 ;;;         "s/clang-format/lisp-format/g;s/clangFormat/lispFormat/;
 ;;;          s/default_extensions =.*\$/default_extensions = ','.join(['lisp','cl','asd','scm','el'])/;
@@ -123,7 +123,7 @@
 ;;; useful for adding directories to the load path searched by
 ;;; lisp-format.
 ;;;
-;;; [1] https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format
+;;; [1] https://raw.githubusercontent.com/llvm-mirror/clang/master/tools/clang-format/git-clang-format
 ;;; [2] https://dx13.co.uk/articles/2015/4/3/Setting-up-git-clang-format.html
 ;;; [3] .git/hooks/pre-commit
 ;;;

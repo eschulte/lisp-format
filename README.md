@@ -90,13 +90,13 @@ for adding directories to the load path searched by lisp-format.
 
 The lisp-format script is appropriate for use in git commit hooks.  In
 fact the
-[git-clang-format script](https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format)
+[git-clang-format script](https://raw.githubusercontent.com/llvm-mirror/clang/master/tools/clang-format/git-clang-format)
 may be fairly trivially converted into a git-lisp-format script by
 replacing "clang" with "lisp" and changing the in-scope file
 extensions as follows.
 
 ```shell
-curl -s https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format \
+curl -s https://raw.githubusercontent.com/llvm-mirror/clang/master/tools/clang-format/git-clang-format \
     |sed \
     "s/clang-format/lisp-format/g;s/clangFormat/lispFormat/;
      s/default_extensions =.*\$/default_extensions = ','.join(['lisp','cl','asd','scm','el'])/;
